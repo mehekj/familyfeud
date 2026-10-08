@@ -1,0 +1,25 @@
+{
+	"name": "familyfeud",
+	"version": "1.0.0",
+	"description": "",
+	"scripts": {
+		"dev": "npm run client",
+		"server": "cd server && npm start",
+		"client": "cd client && npm run dev",
+		"build": "cd client && npm run build",
+		"start": "npm run deploy-server",
+		"deploy-build": "npm --prefix client ci && npm --prefix server ci && npm run build",
+		"deploy-server": "cd server && npm start",
+		"local-deploy": "npm run build && npm run server"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mehekj/familyfeud.git"
+	},
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/mehekj/familyfeud/issues"
+	},
+	"homepage": "https://github.com/mehekj/familyfeud#readme"
+}
