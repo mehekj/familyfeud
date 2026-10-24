@@ -1,32 +1,50 @@
 import { useEffect, useState } from "react";
 import { createInitialGameState } from "./gameQuestions";
+import { useGameTimer } from "./useGameTimer";
 import { subscribeSocketEvents } from "./socketEvents";
+import GameBoard from "./components/GameBoard";
+import GameLobby from "./components/GameLobby";
+import HostControls from "./components/HostControls";
 
-export default function GameRoom({ room, role, socket, initialState = null }) {
-	const [gameState, setGameState] = useState(initialState);
+const DEFAULT_TIMER_LENGTH_SECONDS = 30;
+
+export default function GameRoom({
+	roomCode,
+	role,
+	socket,
+	initialGameState = null,
+}) {
+	const [gameState, setGameState] = useState(initialGameState);
+	const [requestedTimerLengthSeconds, setRequestedTimerLengthSeconds] =
+		useState(DEFAULT_TIMER_LENGTH_SECONDS);
+	const { remainingTimeSeconds, startTimer, stopTimer } = useGameTimer(
+		socket,
+		roomCode,
+	);
 	const isHost = role === "host";
+	const currentQuestion = gameState?.questions[gameState.currentQuestionIndex];
 
 	useEffect(() => {
 		const unsubscribe = subscribeSocketEvents(socket, {
-			"game:state": ({ room: stateRoom, state }) => {
-				if (stateRoom === room) setGameState(state);
+			"game:state": ({ roomCode: eventRoomCode, gameState: nextGameState }) => {
+				if (eventRoomCode === roomCode) setGameState(nextGameState);
 			},
 		});
 
 		return unsubscribe;
-	}, [room, socket]);
+	}, [roomCode, socket]);
 
 	useEffect(() => {
 		if (isHost && gameState?.started) {
-			socket.emit("game:publish", { room, state: gameState });
+			socket.emit("game:publish", { roomCode, gameState });
 		}
-	}, [gameState, isHost, room, socket]);
+	}, [gameState, isHost, roomCode, socket]);
 
-	var revealAnswer = (answerIndex) => {
-		setGameState((current) => ({
-			...current,
-			questions: current.questions.map((question, questionIndex) =>
-				questionIndex !== current.currentQuestionIndex
+	const revealAnswer = (answerIndex) => {
+		setGameState((currentState) => ({
+			...currentState,
+			questions: currentState.questions.map((question, questionIndex) =>
+				questionIndex !== currentState.currentQuestionIndex
 					? question
 					: {
 							...question,
@@ -38,70 +56,67 @@ export default function GameRoom({ room, role, socket, initialState = null }) {
 		}));
 	};
 
-	var nextQuestion = () => {
-		setGameState((current) => ({
-			...current,
-			currentQuestionIndex: current.currentQuestionIndex + 1,
+	const revealQuestion = () => {
+		setGameState((currentState) => ({
+			...currentState,
+			questions: currentState.questions.map((question, questionIndex) =>
+				questionIndex === currentState.currentQuestionIndex
+					? { ...question, questionRevealed: true }
+					: question,
+			),
 		}));
+	};
+
+	const nextQuestion = () => {
+		setGameState((currentState) => ({
+			...currentState,
+			currentQuestionIndex: currentState.currentQuestionIndex + 1,
+		}));
+	};
+
+	const handleStartTimer = () => {
+		startTimer(requestedTimerLengthSeconds);
 	};
 
 	if (isHost && !gameState) {
 		return (
-			<section>
-				<h2>Host Dashboard</h2>
-				<p>Game code: {room}</p>
-				<button onClick={() => setGameState(createInitialGameState())}>
-					Start Game
-				</button>
-			</section>
+			<GameLobby
+				roomCode={roomCode}
+				onStartGame={() => setGameState(createInitialGameState())}
+			/>
 		);
 	}
 
 	if (!gameState) {
-		return (
-			<section>
-				<h2>Game {room}</h2>
-				<p>Waiting for the host to start the game…</p>
-			</section>
-		);
+		return <GameLobby roomCode={roomCode} />;
 	}
 
-	const currentQuestion = gameState.questions[gameState.currentQuestionIndex];
 	if (!currentQuestion) {
-		return (
-			<section>
-				<h2>Game complete</h2>
-			</section>
-		);
+		return <GameBoard roomCode={roomCode} isComplete />;
 	}
 
 	return (
-		<section>
-			<h2>{currentQuestion.question}</h2>
-			<ul>
-				{currentQuestion.answers.map((answer, answerIndex) => (
-					<li key={`${gameState.currentQuestionIndex}-${answerIndex}`}>
-						{isHost || answer.revealed
-							? `${answer.text} — ${answer.points} points`
-							: "???"}
-						{isHost && !answer.revealed && (
-							<button onClick={() => revealAnswer(answerIndex)}>
-								Reveal Answer
-							</button>
-						)}
-					</li>
-				))}
-			</ul>
+		<GameBoard
+			roomCode={roomCode}
+			question={currentQuestion}
+			questionIndex={gameState.currentQuestionIndex}
+			isHost={isHost}
+			remainingTimeSeconds={remainingTimeSeconds}
+			onRevealQuestion={revealQuestion}
+			onRevealAnswer={revealAnswer}
+		>
 			{isHost && (
-				<button
-					disabled={
-						gameState.currentQuestionIndex >= gameState.questions.length - 1
+				<HostControls
+					timerLengthSeconds={requestedTimerLengthSeconds}
+					onTimerLengthChange={setRequestedTimerLengthSeconds}
+					onStartTimer={handleStartTimer}
+					onStopTimer={stopTimer}
+					onNextQuestion={nextQuestion}
+					hasNextQuestion={
+						gameState.currentQuestionIndex < gameState.questions.length - 1
 					}
-					onClick={nextQuestion}
-				>
-					Next Question
-				</button>
+				/>
 			)}
-		</section>
+		</GameBoard>
 	);
 }

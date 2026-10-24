@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import io from "socket.io-client";
-import "./App.css";
 import GameRoom from "./GameRoom";
 import { subscribeSocketEvents } from "./socketEvents";
 
@@ -19,12 +18,14 @@ function App() {
 				setConnected(true);
 			},
 			disconnect: () => setConnected(false),
-			"game:created": ({ room }) => setSession({ room, role: "host" }),
-			"game:joined": ({ room, state }) =>
-				setSession({ room, role: "watcher", initialState: state }),
+			"game:created": ({ roomCode }) => setSession({ roomCode, role: "host" }),
+			"game:joined": ({ roomCode, gameState }) =>
+				setSession({ roomCode, role: "watcher", initialGameState: gameState }),
 			"game:error": ({ message }) => setError(message),
-			"game:closed": ({ room }) => {
-				setSession((current) => (current?.room === room ? null : current));
+			"game:closed": ({ roomCode }) => {
+				setSession((current) =>
+					current?.roomCode === roomCode ? null : current,
+				);
 				setError("The host ended the game.");
 			},
 		});
@@ -35,16 +36,16 @@ function App() {
 		};
 	}, []);
 
-	var createGame = () => {
+	const createGame = () => {
 		setError("");
 		socket?.emit("game:create");
 	};
 
-	var joinGame = () => {
-		const room = prompt("Enter the game code:");
-		if (room?.trim()) {
+	const joinGame = () => {
+		const roomCode = prompt("Enter the game code:");
+		if (roomCode?.trim()) {
 			setError("");
-			socket?.emit("game:join", { room: room.trim() });
+			socket?.emit("game:join", { roomCode: roomCode.trim() });
 		}
 	};
 
@@ -53,10 +54,10 @@ function App() {
 			<h1>Family Feud</h1>
 			{session ? (
 				<GameRoom
-					room={session.room}
+					roomCode={session.roomCode}
 					role={session.role}
 					socket={socket}
-					initialState={session.initialState}
+					initialGameState={session.initialGameState}
 				/>
 			) : (
 				<>

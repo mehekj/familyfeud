@@ -21,12 +21,13 @@ export const gameQuestions = [
     },
 ];
 
-export var createInitialGameState = () => {
+export const createInitialGameState = () => {
     return {
         started: true,
         currentQuestionIndex: 0,
         questions: gameQuestions.map((question) => ({
             question: question.question,
+            questionRevealed: false,
             answers: question.answers.map((answer) => ({
                 ...answer,
                 revealed: false,

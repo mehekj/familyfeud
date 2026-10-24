@@ -1,4 +1,4 @@
-export var subscribeSocketEvents = (socket, handlers) => {
+export const subscribeSocketEvents = (socket, handlers) => {
     for (const [eventName, handler] of Object.entries(handlers)) {
         socket.on(eventName, handler);
     }
