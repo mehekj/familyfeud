@@ -3,6 +3,7 @@ export default function GameBoard({
 	question,
 	questionIndex,
 	isHost,
+	watcherCount = 0,
 	remainingTimeSeconds,
 	onRevealQuestion,
 	onRevealAnswer,
@@ -23,6 +24,7 @@ export default function GameBoard({
 			{remainingTimeSeconds !== null && (
 				<h3>Timer: {remainingTimeSeconds} seconds</h3>
 			)}
+			<h3>Watchers: {watcherCount}</h3>
 			<h2>
 				{isHost || question.questionRevealed
 					? question.question

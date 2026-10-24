@@ -13,8 +13,10 @@ export default function GameRoom({
 	role,
 	socket,
 	initialGameState = null,
+	initialWatcherCount = 0,
 }) {
 	const [gameState, setGameState] = useState(initialGameState);
+	const [watcherCount, setWatcherCount] = useState(initialWatcherCount);
 	const [requestedTimerLengthSeconds, setRequestedTimerLengthSeconds] =
 		useState(DEFAULT_TIMER_LENGTH_SECONDS);
 	const { remainingTimeSeconds, startTimer, stopTimer } = useGameTimer(
@@ -28,6 +30,12 @@ export default function GameRoom({
 		const unsubscribe = subscribeSocketEvents(socket, {
 			"game:state": ({ roomCode: eventRoomCode, gameState: nextGameState }) => {
 				if (eventRoomCode === roomCode) setGameState(nextGameState);
+			},
+			"game:watchers": ({
+				roomCode: eventRoomCode,
+				watcherCount: nextWatcherCount,
+			}) => {
+				if (eventRoomCode === roomCode) setWatcherCount(nextWatcherCount);
 			},
 		});
 
@@ -92,7 +100,9 @@ export default function GameRoom({
 	}
 
 	if (!currentQuestion) {
-		return <GameBoard roomCode={roomCode} isComplete />;
+		return (
+			<GameBoard roomCode={roomCode} watcherCount={watcherCount} isComplete />
+		);
 	}
 
 	return (
@@ -101,6 +111,7 @@ export default function GameRoom({
 			question={currentQuestion}
 			questionIndex={gameState.currentQuestionIndex}
 			isHost={isHost}
+			watcherCount={watcherCount}
 			remainingTimeSeconds={remainingTimeSeconds}
 			onRevealQuestion={revealQuestion}
 			onRevealAnswer={revealAnswer}

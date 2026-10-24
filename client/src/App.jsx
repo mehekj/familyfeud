@@ -18,9 +18,15 @@ function App() {
 				setConnected(true);
 			},
 			disconnect: () => setConnected(false),
-			"game:created": ({ roomCode }) => setSession({ roomCode, role: "host" }),
-			"game:joined": ({ roomCode, gameState }) =>
-				setSession({ roomCode, role: "watcher", initialGameState: gameState }),
+			"game:created": ({ roomCode }) =>
+				setSession({ roomCode, role: "host", watcherCount: 0 }),
+			"game:joined": ({ roomCode, gameState, watcherCount }) =>
+				setSession({
+					roomCode,
+					role: "watcher",
+					initialGameState: gameState,
+					watcherCount,
+				}),
 			"game:error": ({ message }) => setError(message),
 			"game:closed": ({ roomCode }) => {
 				setSession((current) =>
@@ -58,6 +64,7 @@ function App() {
 					role={session.role}
 					socket={socket}
 					initialGameState={session.initialGameState}
+					initialWatcherCount={session.watcherCount}
 				/>
 			) : (
 				<>

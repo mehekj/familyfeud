@@ -16,6 +16,7 @@ export const registerGameSocketHandlers = (io) => {
             gameByRoomCode.set(roomCode, {
                 hostSocketId: clientSocket.id,
                 publicGameState: null,
+                watcherSocketIds: new Set(),
             });
             clientSocket.join(roomCode);
             clientSocket.emit("game:created", { roomCode });
@@ -32,13 +33,16 @@ export const registerGameSocketHandlers = (io) => {
             }
 
             clientSocket.join(roomCode);
+            game.watcherSocketIds.add(clientSocket.id);
             clientSocket.emit("game:joined", {
                 roomCode,
                 gameState: game.publicGameState,
+                watcherCount: game.watcherSocketIds.size,
             });
-            io.to(roomCode)
-                .except(clientSocket.id)
-                .emit("game:player-joined", { roomCode });
+            io.to(roomCode).emit("game:watchers", {
+                roomCode,
+                watcherCount: game.watcherSocketIds.size,
+            });
             console.log(`Socket ${clientSocket.id} joined game ${roomCode}`);
         });
 
@@ -105,6 +109,11 @@ export const registerGameSocketHandlers = (io) => {
                     gameByRoomCode.delete(roomCode);
                     clientSocket.to(roomCode).emit("game:closed", { roomCode });
                     console.log(`Host disconnected; game closed: ${roomCode}`);
+                } else if (game?.watcherSocketIds.delete(clientSocket.id)) {
+                    io.to(roomCode).emit("game:watchers", {
+                        roomCode,
+                        watcherCount: game.watcherSocketIds.size,
+                    });
                 }
             }
         });
