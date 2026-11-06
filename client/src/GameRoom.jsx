@@ -88,6 +88,12 @@ export default function GameRoom({
 		startTimer(requestedTimerLengthSeconds);
 	};
 
+	const handleEndGame = () => {
+		if (window.confirm("End this game for everyone?")) {
+			socket.emit("game:end", { roomCode });
+		}
+	};
+
 	const updateTeamScore = (teamId, newScore) => {
 		setGameState((currentState) => ({
 			...currentState,
@@ -132,6 +138,7 @@ export default function GameRoom({
 			<GameLobby
 				roomCode={roomCode}
 				onStartGame={() => setGameState(createInitialGameState())}
+				onEndGame={handleEndGame}
 			>
 				<RoomStatus roomCode={roomCode} watcherCount={watcherCount} />
 			</GameLobby>
@@ -144,16 +151,17 @@ export default function GameRoom({
 
 	if (!currentQuestion) {
 		return (
-			<GameBoard roomCode={roomCode} watcherCount={watcherCount} isComplete />
+			<>
+				<GameBoard isComplete />
+				{isHost && <button onClick={handleEndGame}>End Game</button>}
+			</>
 		);
 	}
 
 	return (
 		<GameBoard
-			roomCode={roomCode}
 			question={currentQuestion}
 			isHost={isHost}
-			watcherCount={watcherCount}
 			remainingTimeSeconds={remainingTimeSeconds}
 			onRevealQuestion={revealQuestion}
 			onRevealAnswer={revealAnswer}
@@ -180,6 +188,7 @@ export default function GameRoom({
 				addTeam={addTeam}
 				removeTeam={removeTeam}
 			/>
+			{isHost && <button onClick={handleEndGame}>End Game</button>}
 		</GameBoard>
 	);
 }

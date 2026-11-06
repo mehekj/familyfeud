@@ -1,8 +1,6 @@
 export default function GameBoard({
-	roomCode,
 	question,
 	isHost,
-	watcherCount = 0,
 	remainingTimeSeconds,
 	onRevealQuestion,
 	onRevealAnswer,
@@ -41,16 +39,14 @@ export default function GameBoard({
 	};
 
 	if (isComplete) {
-		return <section>{/* <h2>Game {roomCode} complete</h2> */}</section>;
+		return <section>Game over!</section>;
 	}
 
 	return (
 		<section>
-			{/* <h2>Game {roomCode}</h2> */}
 			{remainingTimeSeconds !== null && (
 				<h3>Timer: {remainingTimeSeconds} seconds</h3>
 			)}
-			{/* <h3>Watchers: {watcherCount}</h3> */}
 			<h2>
 				{isHost || question.questionRevealed
 					? question.question
@@ -59,21 +55,6 @@ export default function GameBoard({
 			{isHost && !question.questionRevealed && (
 				<button onClick={onRevealQuestion}>Reveal Question</button>
 			)}
-			{/* <table>
-				{question.answers.map((answer, answerIndex) => (
-					<tr key={`${questionIndex}-${answerIndex}`}>
-						<td>{isHost || answer.revealed ? answer.text : answerIndex + 1}</td>
-						<td>{(isHost || answer.revealed) && answer.points}</td>
-						{isHost && (
-							<td>
-								<button onClick={() => onRevealAnswer(answerIndex)}>
-									Reveal
-								</button>
-							</td>
-						)}
-					</tr>
-				))}
-			</table> */}
 			<div className="game-board" style={gridRowStyle}>
 				{Array.from({ length: Math.ceil(question.answers.length / 2) * 2 }).map(
 					(_, index) => boardCell(index),

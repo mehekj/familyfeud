@@ -21,7 +21,7 @@ export default function Scoreboard({
 						defaultValue={5}
 						onChange={(e) => setIncrement(Number(e.target.value))}
 					/>
-					<button onClick={(e) => addTeam()}>Add Team</button>
+					<button onClick={() => addTeam()}>Add Team</button>
 				</span>
 			)}
 			{teams.map((team) => (
