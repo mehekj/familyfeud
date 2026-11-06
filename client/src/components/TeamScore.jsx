@@ -9,7 +9,7 @@ export default function TeamScore({
 	increment = 5,
 }) {
 	return (
-		<div>
+		<div className="team-score-widget">
 			{isHost ? (
 				<input
 					type="text"
@@ -21,11 +21,16 @@ export default function TeamScore({
 			)}
 			<p>Score: {score}</p>
 			{isHost && (
-				<span>
+				<div className="team-score-actions">
 					<button onClick={() => updateScore(id, score + increment)}>+</button>
 					<button onClick={() => updateScore(id, score - increment)}>-</button>
-					<button onClick={() => removeTeam(id)}>x</button>
-				</span>
+					<button
+						aria-label={`Remove ${teamName}`}
+						onClick={() => removeTeam(id)}
+					>
+						Remove
+					</button>
+				</div>
 			)}
 		</div>
 	);

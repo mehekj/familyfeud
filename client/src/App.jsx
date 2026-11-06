@@ -14,6 +14,8 @@ function App() {
 	const [isResuming, setIsResuming] = useState(false);
 	const [session, setSession] = useState(null);
 	const [error, setError] = useState("");
+	const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
+	const [joinRoomCode, setJoinRoomCode] = useState("");
 
 	useEffect(() => {
 		const clientSocket = io();
@@ -96,11 +98,19 @@ function App() {
 	};
 
 	const joinGame = () => {
-		const roomCode = prompt("Enter the game code:");
-		if (roomCode?.trim()) {
-			setError("");
-			socket?.emit("game:join", { roomCode: roomCode.trim() });
-		}
+		setJoinRoomCode("");
+		setError("");
+		setIsJoinDialogOpen(true);
+	};
+
+	const submitJoinGame = (event) => {
+		event.preventDefault();
+		const roomCode = joinRoomCode.trim();
+		if (!roomCode) return;
+
+		setError("");
+		socket?.emit("game:join", { roomCode });
+		setIsJoinDialogOpen(false);
 	};
 
 	return (
@@ -109,7 +119,9 @@ function App() {
 				roomCode={session?.roomCode}
 				watcherCount={session?.watcherCount}
 			/>
-			<h1>Family Feud</h1>
+			<h1 className="game-title">
+				<span style={{ letterSpacing: "-0.15em" }}>Fa</span>mily Feud
+			</h1>
 			{session ? (
 				<GameRoom
 					key={`${session.roomCode}-${session.resumeVersion ?? 0}`}
@@ -117,7 +129,6 @@ function App() {
 					role={session.role}
 					socket={socket}
 					initialGameState={session.initialGameState}
-					watcherCount={session.watcherCount}
 				/>
 			) : (
 				<>
@@ -135,6 +146,41 @@ function App() {
 						Join Game
 					</button>
 					{error && <p role="alert">{error}</p>}
+					{isJoinDialogOpen && (
+						<div className="join-dialog-backdrop">
+							<section
+								className="join-dialog"
+								role="dialog"
+								aria-modal="true"
+								aria-labelledby="join-dialog-title"
+							>
+								<h2 id="join-dialog-title">Join a Game</h2>
+								<form onSubmit={submitJoinGame}>
+									<label htmlFor="join-room-code">Game code</label>
+									<input
+										autoFocus
+										autoComplete="off"
+										id="join-room-code"
+										name="roomCode"
+										value={joinRoomCode}
+										onChange={(event) => setJoinRoomCode(event.target.value)}
+										required
+									/>
+									<div className="join-dialog-actions">
+										<button
+											type="button"
+											onClick={() => setIsJoinDialogOpen(false)}
+										>
+											Cancel
+										</button>
+										<button type="submit" disabled={!joinRoomCode.trim()}>
+											Join Game
+										</button>
+									</div>
+								</form>
+							</section>
+						</div>
+					)}
 				</>
 			)}
 		</div>

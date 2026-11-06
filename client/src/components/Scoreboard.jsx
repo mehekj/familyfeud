@@ -12,31 +12,36 @@ export default function Scoreboard({
 	const [increment, setIncrement] = useState(5);
 
 	return (
-		<div>
+		<div className="scoreboard">
 			{isHost && (
-				<span>
-					increment:{" "}
-					<input
-						type="number"
-						defaultValue={5}
-						onChange={(e) => setIncrement(Number(e.target.value))}
-					/>
-					<button onClick={() => addTeam()}>Add Team</button>
-				</span>
+				<div className="scoreboard-team-actions">
+					<label>
+						Score increment
+						<input
+							type="number"
+							min="1"
+							defaultValue={5}
+							onChange={(e) => setIncrement(Number(e.target.value))}
+						/>
+					</label>
+					<button onClick={addTeam}>Add Team</button>
+				</div>
 			)}
-			{teams.map((team) => (
-				<TeamScore
-					key={team.id}
-					id={team.id}
-					teamName={team.name}
-					score={team.score}
-					isHost={isHost}
-					updateScore={updateScore}
-					updateName={updateName}
-					removeTeam={removeTeam}
-					increment={increment}
-				/>
-			))}
+			<div className="scoreboard-teams">
+				{teams.map((team) => (
+					<TeamScore
+						key={team.id}
+						id={team.id}
+						teamName={team.name}
+						score={team.score}
+						isHost={isHost}
+						updateScore={updateScore}
+						updateName={updateName}
+						removeTeam={removeTeam}
+						increment={increment}
+					/>
+				))}
+			</div>
 		</div>
 	);
 }

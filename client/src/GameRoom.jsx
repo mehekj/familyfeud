@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import GameBoard from "./components/GameBoard";
 import GameLobby from "./components/GameLobby";
 import HostControls from "./components/HostControls";
-import RoomStatus from "./components/RoomStatus";
 import Scoreboard from "./components/Scoreboard";
 import { createInitialGameState } from "./gameQuestions";
 import { subscribeSocketEvents } from "./socketEvents";
@@ -15,7 +14,6 @@ export default function GameRoom({
 	role,
 	socket,
 	initialGameState = null,
-	watcherCount = 0,
 }) {
 	const [gameState, setGameState] = useState(initialGameState);
 	const [requestedTimerLengthSeconds, setRequestedTimerLengthSeconds] =
@@ -59,12 +57,12 @@ export default function GameRoom({
 		}));
 	};
 
-	const revealQuestion = () => {
+	const toggleQuestion = () => {
 		setGameState((currentState) => ({
 			...currentState,
 			questions: currentState.questions.map((question, questionIndex) =>
 				questionIndex === currentState.currentQuestionIndex
-					? { ...question, questionRevealed: true }
+					? { ...question, questionRevealed: !question.questionRevealed }
 					: question,
 			),
 		}));
@@ -86,6 +84,15 @@ export default function GameRoom({
 
 	const handleStartTimer = () => {
 		startTimer(requestedTimerLengthSeconds);
+	};
+
+	const handleToggleTimer = () => {
+		if (remainingTimeSeconds > 0) {
+			stopTimer();
+			return;
+		}
+
+		handleStartTimer();
 	};
 
 	const handleEndGame = () => {
@@ -133,20 +140,17 @@ export default function GameRoom({
 		}));
 	};
 
-	if (isHost && !gameState) {
+	if (!gameState) {
 		return (
 			<GameLobby
 				roomCode={roomCode}
-				onStartGame={() => setGameState(createInitialGameState())}
-				onEndGame={handleEndGame}
-			>
-				<RoomStatus roomCode={roomCode} watcherCount={watcherCount} />
-			</GameLobby>
+				isHost={isHost}
+				onStartGame={
+					isHost ? () => setGameState(createInitialGameState()) : undefined
+				}
+				onEndGame={isHost ? handleEndGame : undefined}
+			/>
 		);
-	}
-
-	if (!gameState) {
-		return <GameLobby roomCode={roomCode} />;
 	}
 
 	if (!currentQuestion) {
@@ -163,15 +167,16 @@ export default function GameRoom({
 			question={currentQuestion}
 			isHost={isHost}
 			remainingTimeSeconds={remainingTimeSeconds}
-			onRevealQuestion={revealQuestion}
 			onRevealAnswer={revealAnswer}
 		>
 			{isHost && (
 				<HostControls
 					timerLengthSeconds={requestedTimerLengthSeconds}
 					onTimerLengthChange={setRequestedTimerLengthSeconds}
-					onStartTimer={handleStartTimer}
-					onStopTimer={stopTimer}
+					onToggleTimer={handleToggleTimer}
+					isTimerRunning={remainingTimeSeconds > 0}
+					onToggleQuestion={toggleQuestion}
+					questionRevealed={currentQuestion.questionRevealed}
 					onNextQuestion={nextQuestion}
 					onPreviousQuestion={previousQuestion}
 					hasNextQuestion={

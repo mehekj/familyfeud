@@ -1,14 +1,21 @@
-export default function GameLobby({ roomCode, onStartGame, onEndGame }) {
+export default function GameLobby({
+	roomCode,
+	isHost,
+	onStartGame,
+	onEndGame,
+}) {
 	return (
 		<section>
-			<h2>{onStartGame ? "Host Dashboard" : `Game ${roomCode}`}</h2>
+			<h2>{isHost ? "Host Dashboard" : `You are viewing game ${roomCode}`}</h2>
 			<p>
-				{onStartGame
+				{isHost
 					? `Game code: ${roomCode}`
 					: "Waiting for the host to start the game…"}
 			</p>
-			{onStartGame && <button onClick={onStartGame}>Start Game</button>}
-			{onEndGame && <button onClick={onEndGame}>End Game</button>}
+			{isHost && onStartGame && (
+				<button onClick={onStartGame}>Start Game</button>
+			)}
+			{isHost && onEndGame && <button onClick={onEndGame}>End Game</button>}
 		</section>
 	);
 }

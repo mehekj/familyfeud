@@ -6,7 +6,7 @@ import {
 } from "./gameState.js";
 import { authorizeHostRoom } from "./gameAuthorization.js";
 
-const HOST_DISCONNECT_GRACE_PERIOD_MS = 3 * 60 * 1000;
+const HOST_DISCONNECT_GRACE_PERIOD_MS = 10 * 60 * 1000;
 
 export const registerGameSocketHandlers = (io) => {
     const gameByRoomCode = new Map();
