@@ -4,7 +4,9 @@ export default function HostControls({
 	onStartTimer,
 	onStopTimer,
 	onNextQuestion,
+	onPreviousQuestion,
 	hasNextQuestion,
+	hasPreviousQuestion,
 }) {
 	return (
 		<div>
@@ -21,6 +23,9 @@ export default function HostControls({
 			<button onClick={onStopTimer}>Stop Timer</button>
 			<button disabled={!hasNextQuestion} onClick={onNextQuestion}>
 				Next Question
+			</button>
+			<button disabled={!hasPreviousQuestion} onClick={onPreviousQuestion}>
+				Previous Question
 			</button>
 		</div>
 	);

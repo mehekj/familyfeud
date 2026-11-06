@@ -1,7 +1,6 @@
 export default function GameBoard({
 	roomCode,
 	question,
-	questionIndex,
 	isHost,
 	watcherCount = 0,
 	remainingTimeSeconds,
@@ -10,21 +9,48 @@ export default function GameBoard({
 	isComplete = false,
 	children,
 }) {
-	if (isComplete) {
+	const gridRowStyle = {
+		gridTemplateRows: `repeat(${Math.ceil(question.answers.length / 2)}, 1fr)`,
+	};
+
+	const boardCell = (index) => {
+		if (!question || index >= question.answers.length) {
+			return <div key={index} className="game-board-cell-empty"></div>;
+		}
+
+		const answer = question.answers[index];
+		if (!isHost && !answer.revealed) {
+			return (
+				<div key={index} className="game-board-cell-hidden">
+					<span>{index + 1}</span>
+				</div>
+			);
+		}
+
 		return (
-			<section>
-				<h2>Game {roomCode} complete</h2>
-			</section>
+			<div key={index} className="game-board-cell-answer">
+				<span>{answer.text}</span>
+				<span>{answer.points}</span>
+				{isHost && (
+					<span>
+						<button onClick={() => onRevealAnswer(index)}>Reveal</button>
+					</span>
+				)}
+			</div>
 		);
+	};
+
+	if (isComplete) {
+		return <section>{/* <h2>Game {roomCode} complete</h2> */}</section>;
 	}
 
 	return (
 		<section>
-			<h2>Game {roomCode}</h2>
+			{/* <h2>Game {roomCode}</h2> */}
 			{remainingTimeSeconds !== null && (
 				<h3>Timer: {remainingTimeSeconds} seconds</h3>
 			)}
-			<h3>Watchers: {watcherCount}</h3>
+			{/* <h3>Watchers: {watcherCount}</h3> */}
 			<h2>
 				{isHost || question.questionRevealed
 					? question.question
@@ -33,20 +59,26 @@ export default function GameBoard({
 			{isHost && !question.questionRevealed && (
 				<button onClick={onRevealQuestion}>Reveal Question</button>
 			)}
-			<ul>
+			{/* <table>
 				{question.answers.map((answer, answerIndex) => (
-					<li key={`${questionIndex}-${answerIndex}`}>
-						{isHost || answer.revealed
-							? `${answer.text} — ${answer.points} points`
-							: "???"}
-						{isHost && !answer.revealed && (
-							<button onClick={() => onRevealAnswer(answerIndex)}>
-								Reveal Answer
-							</button>
+					<tr key={`${questionIndex}-${answerIndex}`}>
+						<td>{isHost || answer.revealed ? answer.text : answerIndex + 1}</td>
+						<td>{(isHost || answer.revealed) && answer.points}</td>
+						{isHost && (
+							<td>
+								<button onClick={() => onRevealAnswer(answerIndex)}>
+									Reveal
+								</button>
+							</td>
 						)}
-					</li>
+					</tr>
 				))}
-			</ul>
+			</table> */}
+			<div className="game-board" style={gridRowStyle}>
+				{Array.from({ length: Math.ceil(question.answers.length / 2) * 2 }).map(
+					(_, index) => boardCell(index),
+				)}
+			</div>
 			{children}
 		</section>
 	);

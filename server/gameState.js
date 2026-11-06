@@ -3,6 +3,13 @@ export const createPublicGameState = (gameState) => {
 
     return {
         started: gameState.started === true,
+        teams: Array.isArray(gameState.teams)
+            ? gameState.teams.map((team) => ({
+                id: team?.id ?? null,
+                name: typeof team?.name === "string" ? team.name : null,
+                score: Number.isFinite(team?.score) ? team.score : 0,
+            }))
+            : [],
         currentQuestionIndex: Number.isInteger(gameState.currentQuestionIndex)
             ? gameState.currentQuestionIndex
             : 0,

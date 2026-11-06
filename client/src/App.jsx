@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import io from "socket.io-client";
 import GameRoom from "./GameRoom";
 import { subscribeSocketEvents } from "./socketEvents";
+import "./App.css";
+import RoomStatus from "./components/RoomStatus";
 
 function App() {
 	const [socket, setSocket] = useState(null);
@@ -27,6 +29,12 @@ function App() {
 					initialGameState: gameState,
 					watcherCount,
 				}),
+			"game:watchers": ({ roomCode, watcherCount }) =>
+				setSession((current) =>
+					current?.roomCode === roomCode
+						? { ...current, watcherCount }
+						: current,
+				),
 			"game:error": ({ message }) => setError(message),
 			"game:closed": ({ roomCode }) => {
 				setSession((current) =>
@@ -57,6 +65,10 @@ function App() {
 
 	return (
 		<div>
+			<RoomStatus
+				roomCode={session?.roomCode}
+				watcherCount={session?.watcherCount}
+			/>
 			<h1>Family Feud</h1>
 			{session ? (
 				<GameRoom
@@ -64,7 +76,7 @@ function App() {
 					role={session.role}
 					socket={socket}
 					initialGameState={session.initialGameState}
-					initialWatcherCount={session.watcherCount}
+					watcherCount={session.watcherCount}
 				/>
 			) : (
 				<>

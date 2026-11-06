@@ -1,0 +1,54 @@
+html {
+	background-color: #191723;
+}
+
+body {
+	background: radial-gradient(ellipse, #102249, #191723);
+	color: #ecc302;
+	min-height: 100vh;
+	font-family: "Oswald", sans-serif;
+}
+
+.game-board {
+	display: grid;
+	grid-auto-flow: column;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.25rem;
+	border: 3px solid #ecc302;
+	border-radius: 1rem;
+	padding: 0.75rem;
+}
+
+.game-board-cell-empty,
+.game-board-cell-answer,
+.game-board-cell-hidden {
+	display: flex;
+	border: 1px solid #ecc302;
+	outline: 1px solid #ecc302;
+	outline-offset: -3px;
+	padding: 0.25rem;
+	background: #14408c;
+	background: linear-gradient(
+		0deg,
+		rgba(20, 64, 140, 1) 0%,
+		rgba(74, 139, 239, 1) 50%,
+		rgba(74, 139, 239, 1) 80%,
+		rgba(20, 64, 140, 1) 100%
+	);
+}
+
+.game-board-cell-answer {
+	justify-content: space-between;
+}
+
+.game-board-cell-hidden {
+	justify-content: center;
+}
+
+.room-status {
+	text-align: right;
+}
+
+.room-status p {
+	margin: 0;
+}

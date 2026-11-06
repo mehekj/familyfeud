@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { createInitialGameState } from "./gameQuestions";
-import { useGameTimer } from "./useGameTimer";
-import { subscribeSocketEvents } from "./socketEvents";
 import GameBoard from "./components/GameBoard";
 import GameLobby from "./components/GameLobby";
 import HostControls from "./components/HostControls";
+import RoomStatus from "./components/RoomStatus";
+import Scoreboard from "./components/Scoreboard";
+import { createInitialGameState } from "./gameQuestions";
+import { subscribeSocketEvents } from "./socketEvents";
+import { useGameTimer } from "./useGameTimer";
 
 const DEFAULT_TIMER_LENGTH_SECONDS = 30;
 
@@ -13,10 +15,9 @@ export default function GameRoom({
 	role,
 	socket,
 	initialGameState = null,
-	initialWatcherCount = 0,
+	watcherCount = 0,
 }) {
 	const [gameState, setGameState] = useState(initialGameState);
-	const [watcherCount, setWatcherCount] = useState(initialWatcherCount);
 	const [requestedTimerLengthSeconds, setRequestedTimerLengthSeconds] =
 		useState(DEFAULT_TIMER_LENGTH_SECONDS);
 	const { remainingTimeSeconds, startTimer, stopTimer } = useGameTimer(
@@ -30,12 +31,6 @@ export default function GameRoom({
 		const unsubscribe = subscribeSocketEvents(socket, {
 			"game:state": ({ roomCode: eventRoomCode, gameState: nextGameState }) => {
 				if (eventRoomCode === roomCode) setGameState(nextGameState);
-			},
-			"game:watchers": ({
-				roomCode: eventRoomCode,
-				watcherCount: nextWatcherCount,
-			}) => {
-				if (eventRoomCode === roomCode) setWatcherCount(nextWatcherCount);
 			},
 		});
 
@@ -82,8 +77,54 @@ export default function GameRoom({
 		}));
 	};
 
+	const previousQuestion = () => {
+		setGameState((currentState) => ({
+			...currentState,
+			currentQuestionIndex: Math.max(currentState.currentQuestionIndex - 1, 0),
+		}));
+	};
+
 	const handleStartTimer = () => {
 		startTimer(requestedTimerLengthSeconds);
+	};
+
+	const updateTeamScore = (teamId, newScore) => {
+		setGameState((currentState) => ({
+			...currentState,
+			teams: currentState.teams.map((team) =>
+				team.id === teamId ? { ...team, score: newScore } : team,
+			),
+		}));
+	};
+
+	const updateTeamName = (teamId, newName) => {
+		setGameState((currentState) => ({
+			...currentState,
+			teams: currentState.teams.map((team) =>
+				team.id === teamId ? { ...team, name: newName } : team,
+			),
+		}));
+	};
+
+	const addTeam = () => {
+		setGameState((currentState) => {
+			const newTeamId =
+				currentState.teams.length === 0
+					? 1
+					: currentState.teams[currentState.teams.length - 1].id + 1;
+			const newTeam = { id: newTeamId, name: `Team ${newTeamId}`, score: 0 };
+			return {
+				...currentState,
+				teams: [...currentState.teams, newTeam],
+			};
+		});
+	};
+
+	const removeTeam = (teamId) => {
+		setGameState((currentState) => ({
+			...currentState,
+			teams: currentState.teams.filter((team) => team.id !== teamId),
+		}));
 	};
 
 	if (isHost && !gameState) {
@@ -91,7 +132,9 @@ export default function GameRoom({
 			<GameLobby
 				roomCode={roomCode}
 				onStartGame={() => setGameState(createInitialGameState())}
-			/>
+			>
+				<RoomStatus roomCode={roomCode} watcherCount={watcherCount} />
+			</GameLobby>
 		);
 	}
 
@@ -109,7 +152,6 @@ export default function GameRoom({
 		<GameBoard
 			roomCode={roomCode}
 			question={currentQuestion}
-			questionIndex={gameState.currentQuestionIndex}
 			isHost={isHost}
 			watcherCount={watcherCount}
 			remainingTimeSeconds={remainingTimeSeconds}
@@ -123,11 +165,21 @@ export default function GameRoom({
 					onStartTimer={handleStartTimer}
 					onStopTimer={stopTimer}
 					onNextQuestion={nextQuestion}
+					onPreviousQuestion={previousQuestion}
 					hasNextQuestion={
 						gameState.currentQuestionIndex < gameState.questions.length - 1
 					}
+					hasPreviousQuestion={gameState.currentQuestionIndex > 0}
 				/>
 			)}
+			<Scoreboard
+				teams={gameState.teams}
+				isHost={isHost}
+				updateScore={updateTeamScore}
+				updateName={updateTeamName}
+				addTeam={addTeam}
+				removeTeam={removeTeam}
+			/>
 		</GameBoard>
 	);
 }
