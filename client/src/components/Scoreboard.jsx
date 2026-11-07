@@ -8,8 +8,12 @@ export default function Scoreboard({
 	updateName,
 	addTeam,
 	removeTeam,
+	highlightWinners = false,
 }) {
 	const [increment, setIncrement] = useState(5);
+	const winningScore = teams.length
+		? Math.max(...teams.map((team) => team.score))
+		: null;
 
 	return (
 		<div className="scoreboard">
@@ -39,6 +43,7 @@ export default function Scoreboard({
 						updateName={updateName}
 						removeTeam={removeTeam}
 						increment={increment}
+						isWinner={highlightWinners && team.score === winningScore}
 					/>
 				))}
 			</div>

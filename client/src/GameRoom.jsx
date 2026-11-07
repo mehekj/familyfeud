@@ -1,23 +1,36 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import GameBoard from "./components/GameBoard";
 import GameLobby from "./components/GameLobby";
 import HostControls from "./components/HostControls";
 import Scoreboard from "./components/Scoreboard";
+import answerRevealSound from "./assets/answerreveal.mp3";
+import questionRevealSound from "./assets/questionreveal.mp3";
+import timeUpSound from "./assets/timesup.mp3";
 import { createInitialGameState } from "./gameQuestions";
 import { subscribeSocketEvents } from "./socketEvents";
 import { useGameTimer } from "./useGameTimer";
 
 const DEFAULT_TIMER_LENGTH_SECONDS = 30;
 
+const playSound = (soundFile) => {
+	const sound = new Audio(soundFile);
+	sound.play().catch(() => {
+		// Browsers may block audio until the user has interacted with the page.
+	});
+};
+
 export default function GameRoom({
 	roomCode,
 	role,
 	socket,
 	initialGameState = null,
+	onReturnToStart,
 }) {
 	const [gameState, setGameState] = useState(initialGameState);
 	const [requestedTimerLengthSeconds, setRequestedTimerLengthSeconds] =
 		useState(DEFAULT_TIMER_LENGTH_SECONDS);
+	const previousGameStateRef = useRef(null);
+	const previousRemainingTimeRef = useRef(null);
 	const { remainingTimeSeconds, startTimer, stopTimer } = useGameTimer(
 		socket,
 		roomCode,
@@ -41,7 +54,43 @@ export default function GameRoom({
 		}
 	}, [gameState, isHost, roomCode, socket]);
 
-	const revealAnswer = (answerIndex) => {
+	useEffect(() => {
+		const previousGameState = previousGameStateRef.current;
+		previousGameStateRef.current = gameState;
+
+		if (!previousGameState || !gameState) return;
+
+		const questionIndex = gameState.currentQuestionIndex;
+		if (previousGameState.currentQuestionIndex !== questionIndex) return;
+
+		const currentQuestion = gameState.questions[questionIndex];
+		const previousQuestion = previousGameState.questions[questionIndex];
+		if (!currentQuestion || !previousQuestion) return;
+
+		if (
+			!previousQuestion.questionRevealed &&
+			currentQuestion.questionRevealed
+		) {
+			playSound(questionRevealSound);
+		}
+
+		const hasNewlyRevealedAnswer = currentQuestion.answers.some(
+			(answer, index) =>
+				!previousQuestion.answers[index]?.revealed && answer.revealed,
+		);
+		if (hasNewlyRevealedAnswer) playSound(answerRevealSound);
+	}, [gameState]);
+
+	useEffect(() => {
+		const previousRemainingTime = previousRemainingTimeRef.current;
+		previousRemainingTimeRef.current = remainingTimeSeconds;
+
+		if (previousRemainingTime > 0 && remainingTimeSeconds === 0) {
+			playSound(timeUpSound);
+		}
+	}, [remainingTimeSeconds]);
+
+	const toggleAnswer = (answerIndex) => {
 		setGameState((currentState) => ({
 			...currentState,
 			questions: currentState.questions.map((question, questionIndex) =>
@@ -50,7 +99,9 @@ export default function GameRoom({
 					: {
 							...question,
 							answers: question.answers.map((answer, index) =>
-								index === answerIndex ? { ...answer, revealed: true } : answer,
+								index === answerIndex
+									? { ...answer, revealed: !answer.revealed }
+									: answer,
 							),
 						},
 			),
@@ -155,10 +206,12 @@ export default function GameRoom({
 
 	if (!currentQuestion) {
 		return (
-			<>
-				<GameBoard isComplete />
-				{isHost && <button onClick={handleEndGame}>End Game</button>}
-			</>
+			<GameBoard isComplete>
+				<Scoreboard teams={gameState.teams} isHost={false} highlightWinners />
+				<button onClick={() => onReturnToStart(roomCode, role)}>
+					Return to Start Screen
+				</button>
+			</GameBoard>
 		);
 	}
 
@@ -167,7 +220,7 @@ export default function GameRoom({
 			question={currentQuestion}
 			isHost={isHost}
 			remainingTimeSeconds={remainingTimeSeconds}
-			onRevealAnswer={revealAnswer}
+			onToggleAnswer={toggleAnswer}
 		>
 			{isHost && (
 				<HostControls

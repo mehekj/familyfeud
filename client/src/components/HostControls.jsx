@@ -21,8 +21,11 @@ export default function HostControls({
 					<button disabled={!hasPreviousQuestion} onClick={onPreviousQuestion}>
 						&lt;
 					</button>
-					<button disabled={!hasNextQuestion} onClick={onNextQuestion}>
-						&gt;
+					<button
+						aria-label={hasNextQuestion ? "Next question" : "Finish game"}
+						onClick={onNextQuestion}
+					>
+						{hasNextQuestion ? ">" : "Finish"}
 					</button>
 					<button onClick={onToggleQuestion}>
 						{questionRevealed ? "Hide Question" : "Reveal Question"}

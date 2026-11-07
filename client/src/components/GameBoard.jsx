@@ -2,13 +2,20 @@ export default function GameBoard({
 	question,
 	isHost,
 	remainingTimeSeconds,
-	onRevealAnswer,
+	onToggleAnswer,
 	isComplete = false,
 	children,
 }) {
 	if (isComplete) {
-		return <section>Game over!</section>;
+		return (
+			<section className="game-over-screen">
+				<h2>Game over!</h2>
+				{children}
+			</section>
+		);
 	}
+
+	const MIN_GRID_CELLS = 8;
 
 	if (!question) return null;
 
@@ -16,11 +23,16 @@ export default function GameBoard({
 		remainingTimeSeconds === null
 			? "\u00a0"
 			: remainingTimeSeconds > 0
-				? `Timer: ${remainingTimeSeconds} seconds`
+				? `${remainingTimeSeconds}`
 				: "Time's up!";
 
+	const cellCount = Math.max(
+		MIN_GRID_CELLS,
+		Math.ceil(question.answers.length / 2) * 2,
+	);
+
 	const gridRowStyle = {
-		gridTemplateRows: `repeat(${Math.ceil(question.answers.length / 2)}, 1fr)`,
+		gridTemplateRows: `repeat(${cellCount / 2}, 1fr)`,
 	};
 
 	const boardCell = (index) => {
@@ -32,7 +44,7 @@ export default function GameBoard({
 		if (!isHost && !answer.revealed) {
 			return (
 				<div key={index} className="game-board-cell-hidden">
-					<span>{index + 1}</span>
+					<span className="game-board-cell-number">{index + 1}</span>
 				</div>
 			);
 		}
@@ -40,14 +52,14 @@ export default function GameBoard({
 		return (
 			<div key={index} className="game-board-cell-answer">
 				<span>{answer.text}</span>
-				<span>{answer.points}</span>
+				<span className="game-board-cell-points">{answer.points}</span>
 				{isHost && (
 					<span>
 						<button
-							disabled={!question.questionRevealed || answer.revealed}
-							onClick={() => onRevealAnswer(index)}
+							disabled={!question.questionRevealed}
+							onClick={() => onToggleAnswer(index)}
 						>
-							Reveal
+							{answer.revealed ? "Hide" : "Reveal"}
 						</button>
 					</span>
 				)}
@@ -61,12 +73,12 @@ export default function GameBoard({
 				{timerText}
 			</h3>
 			<div className="game-board-content">
-				<h2>
+				<h2 className="game-question">
 					{isHost || question.questionRevealed ? question.question : "???"}
 				</h2>
 				<div className="game-board" style={gridRowStyle}>
 					{Array.from({
-						length: Math.ceil(question.answers.length / 2) * 2,
+						length: cellCount,
 					}).map((_, index) => boardCell(index))}
 				</div>
 			</div>

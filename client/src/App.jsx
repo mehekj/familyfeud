@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import GameRoom from "./GameRoom";
 import { subscribeSocketEvents } from "./socketEvents";
@@ -16,6 +16,7 @@ function App() {
 	const [error, setError] = useState("");
 	const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
 	const [joinRoomCode, setJoinRoomCode] = useState("");
+	const suppressClosedErrorForRoom = useRef(null);
 
 	useEffect(() => {
 		const clientSocket = io();
@@ -82,7 +83,11 @@ function App() {
 				setSession((current) =>
 					current?.roomCode === roomCode ? null : current,
 				);
-				setError("The game has ended.");
+				if (suppressClosedErrorForRoom.current === roomCode) {
+					suppressClosedErrorForRoom.current = null;
+				} else {
+					setError("The game has ended.");
+				}
 			},
 		});
 
@@ -91,6 +96,17 @@ function App() {
 			clientSocket.disconnect();
 		};
 	}, []);
+
+	const returnToStart = (roomCode, role) => {
+		setError("");
+		if (role === "host") {
+			suppressClosedErrorForRoom.current = roomCode;
+			sessionStorage.removeItem(HOST_ROOM_CODE_KEY);
+			sessionStorage.removeItem(HOST_RESUME_TOKEN_KEY);
+			socket?.emit("game:end", { roomCode });
+		}
+		setSession(null);
+	};
 
 	const createGame = () => {
 		setError("");
@@ -114,7 +130,13 @@ function App() {
 	};
 
 	return (
-		<div>
+		<div
+			className={
+				session?.role === "watcher"
+					? "app-shell app-shell--watcher"
+					: "app-shell"
+			}
+		>
 			<RoomStatus
 				roomCode={session?.roomCode}
 				watcherCount={session?.watcherCount}
@@ -129,6 +151,7 @@ function App() {
 					role={session.role}
 					socket={socket}
 					initialGameState={session.initialGameState}
+					onReturnToStart={returnToStart}
 				/>
 			) : (
 				<>

@@ -9,6 +9,14 @@ body {
 	font-family: "Oswald", sans-serif;
 }
 
+* {
+	box-sizing: border-box;
+}
+
+.app-shell--watcher {
+	font-size: 150%;
+}
+
 button {
 	min-height: 2.5rem;
 	padding: 0.55rem 0.85rem;
@@ -44,7 +52,7 @@ input {
 	min-height: 2.5rem;
 	padding: 0.25rem 0.5rem;
 	border: 1px solid rgba(236, 195, 2, 0.45);
-	border-radius: 0.45rem;
+	border-radius: 0.5rem;
 	background: #f7f6f1;
 	color: #191723;
 	font: inherit;
@@ -62,21 +70,17 @@ input[type="number"] {
 	line-height: 1.1;
 	text-align: center;
 	font-variant: small-caps;
-	background: linear-gradient(
-		to bottom,
-		#ff9b18 0%,
-		#ffb522 34%,
-		#ffe65b 62%,
-		#ffc629 82%,
-		#e8890a 100%
-	);
-	background-clip: text;
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	-webkit-text-stroke: 1px rgba(143, 67, 0, 0.7);
-	filter: drop-shadow(0 2px 0 rgba(255, 239, 143, 0.8))
-		drop-shadow(0 -2px 0 rgba(145, 57, 0, 0.75))
-		drop-shadow(0 5px 2px rgba(0, 0, 0, 0.65));
+}
+
+.app-shell--watcher .game-title {
+	font-size: 3.9375rem;
+}
+
+.game-question {
+	border: 2px solid rgba(74, 139, 239, 1);
+	border-radius: 0.5rem;
+	padding: 0.5rem;
+	width: 90%;
 }
 
 .game-board-container {
@@ -88,6 +92,7 @@ input[type="number"] {
 	flex-direction: column;
 	align-items: center;
 	width: 100%;
+	color: white;
 }
 
 .game-board-content h2,
@@ -102,17 +107,26 @@ input[type="number"] {
 	text-align: center;
 }
 
+.game-over-screen {
+	display: grid;
+	justify-items: center;
+	gap: 1rem;
+	width: 100%;
+}
+
+.game-over-screen > .scoreboard {
+	width: 100%;
+}
+
 .game-board {
 	display: grid;
 	grid-auto-flow: column;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 0.25rem;
-	border: 3px solid #ecc302;
-	border-radius: 1rem;
-	padding: 0.75rem;
-	box-sizing: border-box;
-	width: 100%;
-	max-width: 800px;
+	border: 2px solid rgba(74, 139, 239, 1);
+	border-radius: 0.5rem;
+	padding: 0.5rem;
+	width: 90%;
 }
 
 .game-board-cell-empty,
@@ -120,25 +134,29 @@ input[type="number"] {
 .game-board-cell-hidden {
 	display: flex;
 	border: 1px solid #ecc302;
-	outline: 1px solid #ecc302;
-	outline-offset: -3px;
 	padding: 0.25rem;
 	background: #14408c;
-	background: linear-gradient(
-		0deg,
-		rgba(20, 64, 140, 1) 0%,
-		rgba(74, 139, 239, 1) 50%,
-		rgba(74, 139, 239, 1) 80%,
-		rgba(20, 64, 140, 1) 100%
-	);
+	color: white;
+	text-transform: uppercase;
+	font-weight: 500;
+	align-items: center;
 }
 
 .game-board-cell-answer {
 	justify-content: space-between;
 }
 
-.game-board-cell-hidden {
+.game-board-cell-hidden,
+.game-board-cell-empty {
 	justify-content: center;
+	background: rgba(74, 139, 239, 1);
+}
+
+.game-board-cell-number {
+	background: #14408c;
+	border-radius: 50%;
+	min-width: 2rem;
+	text-align: center;
 }
 
 .room-status {
@@ -166,7 +184,7 @@ input[type="number"] {
 	gap: 0.75rem;
 	padding: 1rem;
 	border: 1px solid rgba(236, 195, 2, 0.65);
-	border-radius: 0.75rem;
+	border-radius: 0.5rem;
 	background: rgba(16, 34, 73, 0.82);
 	box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.2);
 }
@@ -174,6 +192,10 @@ input[type="number"] {
 .host-control-widget h3 {
 	margin: 0;
 	font-size: 1.1rem;
+}
+
+.app-shell--watcher .host-control-widget h3 {
+	font-size: 1.2375rem;
 }
 
 .host-control-timer-length {
@@ -219,7 +241,7 @@ input[type="number"] {
 	width: min(100%, 24rem);
 	padding: 1.5rem;
 	border: 1px solid rgba(236, 195, 2, 0.65);
-	border-radius: 0.75rem;
+	border-radius: 0.5rem;
 	background: #191723;
 	box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.4);
 }
@@ -258,7 +280,7 @@ input[type="number"] {
 	gap: 0.6rem;
 	padding: 0.85rem;
 	border: 1px solid rgba(236, 195, 2, 0.45);
-	border-radius: 0.65rem;
+	border-radius: 0.5rem;
 	background: rgba(16, 34, 73, 0.72);
 }
 
@@ -277,8 +299,35 @@ input[type="number"] {
 .team-score-widget {
 	padding: 1rem;
 	border: 1px solid rgba(236, 195, 2, 0.45);
-	border-radius: 0.75rem;
+	border-radius: 0.5rem;
 	background: rgba(16, 34, 73, 0.78);
+}
+
+.team-score-widget--winner {
+	border: 2px solid #ffd84d;
+	background: linear-gradient(
+		145deg,
+		rgba(89, 68, 23, 0.85),
+		rgba(16, 34, 73, 0.9)
+	);
+	box-shadow: 0 0 1.25rem rgba(255, 216, 77, 0.28);
+}
+
+.team-score-winner-badge {
+	display: inline-block;
+	margin-bottom: 0.6rem;
+	padding: 0.2rem 0.6rem;
+	border-radius: 999px;
+	background: #ffd84d;
+	color: #191723;
+	font-size: 0.8rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.app-shell--watcher .team-score-winner-badge {
+	font-size: 0.9rem;
 }
 
 .team-score-widget h3 {

@@ -7,9 +7,13 @@ export default function TeamScore({
 	updateName,
 	removeTeam,
 	increment = 5,
+	isWinner = false,
 }) {
 	return (
-		<div className="team-score-widget">
+		<div
+			className={`team-score-widget${isWinner ? " team-score-widget--winner" : ""}`}
+		>
+			{isWinner && <span className="team-score-winner-badge">Winner</span>}
 			{isHost ? (
 				<input
 					type="text"
