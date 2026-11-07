@@ -1,16 +1,16 @@
 import TeamScore from "./TeamScore";
-import { useState } from "react";
 
 export default function Scoreboard({
 	teams,
 	isHost,
+	scoreIncrement = 5,
+	onScoreIncrementChange,
 	updateScore,
 	updateName,
 	addTeam,
 	removeTeam,
 	highlightWinners = false,
 }) {
-	const [increment, setIncrement] = useState(5);
 	const winningScore = teams.length
 		? Math.max(...teams.map((team) => team.score))
 		: null;
@@ -24,8 +24,8 @@ export default function Scoreboard({
 						<input
 							type="number"
 							min="1"
-							defaultValue={5}
-							onChange={(e) => setIncrement(Number(e.target.value))}
+							value={scoreIncrement}
+							onChange={(e) => onScoreIncrementChange(Number(e.target.value))}
 						/>
 					</label>
 					<button onClick={addTeam}>Add Team</button>
@@ -42,7 +42,7 @@ export default function Scoreboard({
 						updateScore={updateScore}
 						updateName={updateName}
 						removeTeam={removeTeam}
-						increment={increment}
+						increment={scoreIncrement}
 						isWinner={highlightWinners && team.score === winningScore}
 					/>
 				))}

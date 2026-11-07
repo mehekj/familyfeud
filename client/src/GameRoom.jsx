@@ -11,6 +11,7 @@ import { subscribeSocketEvents } from "./socketEvents";
 import { useGameTimer } from "./useGameTimer";
 
 const DEFAULT_TIMER_LENGTH_SECONDS = 30;
+const DEFAULT_SCORE_INCREMENT = 5;
 
 const playSound = (soundFile) => {
 	const sound = new Audio(soundFile);
@@ -29,6 +30,7 @@ export default function GameRoom({
 	const [gameState, setGameState] = useState(initialGameState);
 	const [requestedTimerLengthSeconds, setRequestedTimerLengthSeconds] =
 		useState(DEFAULT_TIMER_LENGTH_SECONDS);
+	const [scoreIncrement, setScoreIncrement] = useState(DEFAULT_SCORE_INCREMENT);
 	const previousGameStateRef = useRef(null);
 	const previousRemainingTimeRef = useRef(null);
 	const { remainingTimeSeconds, startTimer, stopTimer } = useGameTimer(
@@ -91,6 +93,11 @@ export default function GameRoom({
 	}, [remainingTimeSeconds]);
 
 	const toggleAnswer = (answerIndex) => {
+		const answer = currentQuestion?.answers[answerIndex];
+		if (answer && !answer.revealed) {
+			setScoreIncrement(answer.points + (answer.bonus ? 5 : 0));
+		}
+
 		setGameState((currentState) => ({
 			...currentState,
 			questions: currentState.questions.map((question, questionIndex) =>
@@ -241,6 +248,8 @@ export default function GameRoom({
 			<Scoreboard
 				teams={gameState.teams}
 				isHost={isHost}
+				scoreIncrement={scoreIncrement}
+				onScoreIncrementChange={setScoreIncrement}
 				updateScore={updateTeamScore}
 				updateName={updateTeamName}
 				addTeam={addTeam}
