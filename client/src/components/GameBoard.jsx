@@ -50,9 +50,14 @@ export default function GameBoard({
 		}
 
 		return (
-			<div key={index} className="game-board-cell-answer">
+			<div
+				key={index}
+				className={`game-board-cell-answer${answer.bonus ? " game-board-cell-answer--bonus" : ""}`}
+			>
 				<span>{answer.text}</span>
-				<span className="game-board-cell-points">{answer.points}</span>
+				<span className="game-board-cell-points">
+					{answer.bonus ? `${answer.points} + 5` : answer.points}
+				</span>
 				{isHost && (
 					<span>
 						<button

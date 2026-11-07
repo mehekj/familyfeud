@@ -32,6 +32,7 @@ export const createPublicGameState = (gameState) => {
                             isRevealed && Number.isFinite(answer?.points)
                                 ? answer.points
                                 : null,
+                        bonus: isRevealed && answer?.bonus === true,
                         revealed: isRevealed,
                     };
                 })
